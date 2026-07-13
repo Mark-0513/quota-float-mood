@@ -28,4 +28,5 @@
 auth.json
 credentials.json
 token.json
+.tauri-updater.key
 /效果/
