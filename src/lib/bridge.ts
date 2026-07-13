@@ -1,6 +1,6 @@
 import type { ProviderSnapshot, WidgetPreferences } from "../types";
 
-const defaultPreferences: WidgetPreferences = { locked: false, alwaysOnTop: true, pinnedProvider: null, autoRotateSeconds: 12, language: "zh-CN" };
+const defaultPreferences: WidgetPreferences = { locked: false, alwaysOnTop: true, stayExpanded: false, pinnedProvider: null, autoRotateSeconds: 12, language: "zh-CN" };
 
 const mockSnapshot: ProviderSnapshot = {
   provider: "codex",
@@ -14,6 +14,14 @@ const mockSnapshot: ProviderSnapshot = {
   status: "ok",
   message: null,
 };
+
+let widgetTransition: Promise<void> = Promise.resolve();
+
+function enqueueWidgetTransition(operation: () => Promise<void>): Promise<void> {
+  const next = widgetTransition.then(operation, operation);
+  widgetTransition = next.catch(() => undefined);
+  return next;
+}
 
 export const isTauri = () => "__TAURI_INTERNALS__" in window;
 
@@ -76,19 +84,33 @@ export async function startDragging(): Promise<void> {
   }, 80);
 }
 
-export async function setWidgetExpanded(expanded: boolean): Promise<void> {
-  if (!isTauri()) return;
-  const { invoke } = await import("@tauri-apps/api/core");
-  await invoke(expanded ? "expand_widget" : "collapse_widget");
+export function setWidgetExpanded(expanded: boolean): Promise<void> {
+  if (!isTauri()) return Promise.resolve();
+  return enqueueWidgetTransition(async () => {
+    const { invoke } = await import("@tauri-apps/api/core");
+    if (!expanded) {
+      await invoke("collapse_widget");
+      return;
+    }
+    const { currentMonitor } = await import("@tauri-apps/api/window");
+    const monitor = await currentMonitor().catch(() => null);
+    const workArea = monitor ? {
+      position: { x: monitor.workArea.position.x, y: monitor.workArea.position.y },
+      size: { width: monitor.workArea.size.width, height: monitor.workArea.size.height },
+    } : null;
+    await invoke("expand_widget", { workArea });
+  });
 }
 
 export async function listenDesktopEvents(handlers: {
   onPreferences: (value: WidgetPreferences) => void;
   onRefresh: () => void;
+  onUpdate: () => void;
 }): Promise<() => void> {
   if (!isTauri()) return () => undefined;
   const { listen } = await import("@tauri-apps/api/event");
   const unlistenPreferences = await listen<WidgetPreferences>("preferences-changed", (event) => handlers.onPreferences(event.payload));
   const unlistenRefresh = await listen("refresh-requested", handlers.onRefresh);
-  return () => { unlistenPreferences(); unlistenRefresh(); };
+  const unlistenUpdate = await listen("update-check-requested", handlers.onUpdate);
+  return () => { unlistenPreferences(); unlistenRefresh(); unlistenUpdate(); };
 }

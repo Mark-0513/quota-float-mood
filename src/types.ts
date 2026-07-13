@@ -24,6 +24,7 @@ export interface ProviderSnapshot {
 export interface WidgetPreferences {
   locked: boolean;
   alwaysOnTop: boolean;
+  stayExpanded: boolean;
   pinnedProvider: ProviderId | null;
   autoRotateSeconds: number;
   language: Language;

@@ -48,8 +48,7 @@ fn load_auth() -> Result<Auth, &'static str> {
         return Err("Codex login data is unavailable.");
     }
     let raw = fs::read_to_string(path).map_err(|_| "Please sign in to Codex Desktop first.")?;
-    let value: Value =
-        serde_json::from_str(&raw).map_err(|_| "Codex login format has changed.")?;
+    let value: Value = serde_json::from_str(&raw).map_err(|_| "Codex login format has changed.")?;
     let tokens = value.get("tokens").unwrap_or(&value);
     let access_token = pick_string(tokens, &["access_token", "accessToken"])
         .ok_or("Codex login expired. Please sign in again.")?
@@ -236,13 +235,24 @@ fn find_window<'a>(
 ) -> Option<&'a Value> {
     for name in names {
         if let Some(value) = rate_limit.get(*name) {
-            if parse_window(Some(value)).is_some() {
+            let Some(window) = parse_window(Some(value)) else {
+                continue;
+            };
+            if window.window_seconds == 0
+                || (expected_seconds > 0 && window.window_seconds.abs_diff(expected_seconds) <= 60)
+            {
                 return Some(value);
             }
         }
     }
 
-    for key in ["windows", "limit_windows", "limitWindows", "limits", "buckets"] {
+    for key in [
+        "windows",
+        "limit_windows",
+        "limitWindows",
+        "limits",
+        "buckets",
+    ] {
         let Some(items) = rate_limit.get(key).and_then(Value::as_array) else {
             continue;
         };
@@ -277,10 +287,7 @@ fn safe_http_failure(status: reqwest::StatusCode) -> (&'static str, &'static str
             "unavailable",
             "Quota service is rate limited. It will retry automatically.",
         ),
-        _ => (
-            "unavailable",
-            "Quota service is temporarily unavailable.",
-        ),
+        _ => ("unavailable", "Quota service is temporarily unavailable."),
     }
 }
 
@@ -312,7 +319,10 @@ pub async fn fetch_snapshot(client: &reqwest::Client) -> ProviderSnapshot {
     };
 
     let (usage_result, credits_result) = tokio::join!(
-        client.get(USAGE_URL).headers(request_headers.clone()).send(),
+        client
+            .get(USAGE_URL)
+            .headers(request_headers.clone())
+            .send(),
         client.get(CREDITS_URL).headers(request_headers).send(),
     );
 
@@ -332,10 +342,7 @@ pub async fn fetch_snapshot(client: &reqwest::Client) -> ProviderSnapshot {
     let usage: Value = match limited_json(usage_response).await {
         Ok(value) => value,
         Err(_) => {
-            return ProviderSnapshot::failure(
-                "unavailable",
-                "Quota response format has changed.",
-            )
+            return ProviderSnapshot::failure("unavailable", "Quota response format has changed.")
         }
     };
     let rate_limit = usage
@@ -367,11 +374,17 @@ pub async fn fetch_snapshot(client: &reqwest::Client) -> ProviderSnapshot {
             "weekWindow",
             "weekly",
             "secondary",
+            "primary_window",
+            "primaryWindow",
+            "primary",
         ],
         604_800,
     ));
-    if short_window.is_none() {
-        return ProviderSnapshot::failure("unavailable", "Quota response is missing the 5h window.");
+    if short_window.is_none() && weekly_window.is_none() {
+        return ProviderSnapshot::failure(
+            "unavailable",
+            "Quota response does not contain a recognized usage window.",
+        );
     }
 
     let usage_credits = usage
@@ -500,7 +513,9 @@ mod tests {
 
         let explicit_used = serde_json::json!({"used_percent": 0.4, "windowSeconds": 18000});
         assert_eq!(
-            parse_window(Some(&explicit_used)).unwrap().remaining_percent,
+            parse_window(Some(&explicit_used))
+                .unwrap()
+                .remaining_percent,
             99.6
         );
     }
@@ -513,13 +528,44 @@ mod tests {
                 {"name": "primary", "remainingPercent": 51, "windowSeconds": 18000}
             ]
         });
-        let short =
-            parse_window(find_window(&rate_limit, &["primary_window", "primary"], 18_000))
-                .unwrap();
-        let weekly =
-            parse_window(find_window(&rate_limit, &["secondary_window", "weekly"], 604_800))
-                .unwrap();
+        let short = parse_window(find_window(
+            &rate_limit,
+            &["primary_window", "primary"],
+            18_000,
+        ))
+        .unwrap();
+        let weekly = parse_window(find_window(
+            &rate_limit,
+            &["secondary_window", "weekly"],
+            604_800,
+        ))
+        .unwrap();
         assert_eq!(short.remaining_percent, 51.0);
         assert_eq!(weekly.remaining_percent, 88.0);
+    }
+
+    #[test]
+    fn does_not_treat_a_weekly_primary_field_as_a_short_window() {
+        let value = serde_json::json!({
+            "primary_window": {"remainingPercent": 98, "windowSeconds": 604800},
+            "weekly_window": {"remainingPercent": 98, "windowSeconds": 604800}
+        });
+        assert!(find_window(&value, &["primary_window", "primary"], 18_000).is_none());
+        assert!(find_window(&value, &["weekly_window", "weekly"], 604_800).is_some());
+    }
+
+    #[test]
+    fn recognizes_a_weekly_primary_field_as_weekly_fallback() {
+        let value = serde_json::json!({
+            "primary": {"remainingPercent": 98, "windowSeconds": 604800}
+        });
+        let weekly = parse_window(find_window(
+            &value,
+            &["weekly_window", "weekly", "primary_window", "primary"],
+            604_800,
+        ))
+        .unwrap();
+        assert_eq!(weekly.remaining_percent, 98.0);
+        assert_eq!(weekly.window_seconds, 604_800);
     }
 }

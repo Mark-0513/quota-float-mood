@@ -3,6 +3,8 @@
 /outputs
 /release
 /src-tauri/target
+/.codex-target*/
+/.tauri-dev-target/
 /.agents
 /.chrome-qa
 /.chrome-qa2

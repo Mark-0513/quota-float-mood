@@ -14,7 +14,7 @@ const preview: ProviderSnapshot = {
   status: "ok",
   message: null,
 };
-const preferences: WidgetPreferences = { locked: false, alwaysOnTop: true, pinnedProvider: "codex", autoRotateSeconds: 12, language: "en" };
+const preferences: WidgetPreferences = { locked: false, alwaysOnTop: true, stayExpanded: false, pinnedProvider: "codex", autoRotateSeconds: 12, language: "en" };
 
 interface Values {
   radius: number;
@@ -27,7 +27,7 @@ interface Values {
   warm: string;
 }
 
-type PreviewMode = 74 | 35 | 8 | "unavailable" | "stale" | "signed_out" | "orb";
+type PreviewMode = 74 | 35 | 8 | "unavailable" | "stale" | "signed_out" | "orb" | "weekly" | "weekly-orb";
 
 const previewModes: Array<{ value: PreviewMode; label: string }> = [
   { value: 74, label: "74% Healthy" },
@@ -36,6 +36,8 @@ const previewModes: Array<{ value: PreviewMode; label: string }> = [
   { value: "unavailable", label: "Unavailable" },
   { value: "stale", label: "Stale" },
   { value: "signed_out", label: "Signed out" },
+  { value: "weekly", label: "Weekly fallback" },
+  { value: "weekly-orb", label: "Weekly orb" },
   { value: "orb", label: "Orb" },
 ];
 
@@ -46,7 +48,7 @@ function initialPreviewMode(): PreviewMode {
   if (mode === "healthy") return 74;
   if (mode === "caution") return 35;
   if (mode === "critical") return 8;
-  if (mode === "unavailable" || mode === "stale" || mode === "signed_out" || mode === "orb") return mode;
+  if (mode === "unavailable" || mode === "stale" || mode === "signed_out" || mode === "orb" || mode === "weekly" || mode === "weekly-orb") return mode;
   return 74;
 }
 
@@ -70,6 +72,7 @@ export function DesignPlayground() {
 
   const makePreview = (mode: PreviewMode): ProviderSnapshot => {
     if (mode === "orb") return preview;
+    if (mode === "weekly" || mode === "weekly-orb") return { ...preview, shortWindow: null };
     if (typeof mode === "number") {
       return { ...preview, shortWindow: preview.shortWindow ? { ...preview.shortWindow, remainingPercent: mode } : null };
     }
@@ -96,7 +99,7 @@ export function DesignPlayground() {
         <div className="screenshot-stage screenshot-stage--states" style={style}>
           {[74, 35, 8].map((mode) => (
             <div className="design-card-frame" key={mode}>
-              <QuotaCard snapshot={makePreview(mode as PreviewMode)} preferences={preferences} providerCount={1} onPrevious={() => {}} onNext={() => {}} onTogglePin={() => {}} onLock={() => {}} onLanguage={() => {}} onDrag={() => {}} onHover={() => {}} isConsuming={mode === 35} />
+              <QuotaCard snapshot={makePreview(mode as PreviewMode)} preferences={preferences} providerCount={1} onPrevious={() => {}} onNext={() => {}} onTogglePin={() => {}} onLock={() => {}} onToggleStayExpanded={() => {}} onDrag={() => {}} onHover={() => {}} isConsuming={mode === 35} />
             </div>
           ))}
         </div>
@@ -105,10 +108,10 @@ export function DesignPlayground() {
 
     return (
       <div className="screenshot-stage" style={style}>
-        <div className={previewMode === "orb" ? "design-orb-frame" : "design-card-frame"}>
-          {previewMode === "orb"
+        <div className={previewMode === "orb" || previewMode === "weekly-orb" ? "design-orb-frame" : "design-card-frame"}>
+          {previewMode === "orb" || previewMode === "weekly-orb"
             ? <QuotaOrb snapshot={activePreview} language="en" onDrag={() => {}} onHover={() => {}} />
-            : <QuotaCard snapshot={activePreview} preferences={preferences} providerCount={1} onPrevious={() => {}} onNext={() => {}} onTogglePin={() => {}} onLock={() => {}} onLanguage={() => {}} onDrag={() => {}} onHover={() => {}} initialShowCreditTip={showCreditTip} />}
+            : <QuotaCard snapshot={activePreview} preferences={preferences} providerCount={1} onPrevious={() => {}} onNext={() => {}} onTogglePin={() => {}} onLock={() => {}} onToggleStayExpanded={() => {}} onDrag={() => {}} onHover={() => {}} initialShowCreditTip={showCreditTip} />}
         </div>
       </div>
     );
@@ -122,10 +125,10 @@ export function DesignPlayground() {
             <button key={mode.value} className={previewMode === mode.value ? "is-active" : ""} onClick={() => setPreviewMode(mode.value)}>{mode.label}</button>
           ))}
         </div>
-        <div className={previewMode === "orb" ? "design-orb-frame" : "design-card-frame"}>
-          {previewMode === "orb"
+        <div className={previewMode === "orb" || previewMode === "weekly-orb" ? "design-orb-frame" : "design-card-frame"}>
+          {previewMode === "orb" || previewMode === "weekly-orb"
             ? <QuotaOrb snapshot={activePreview} onDrag={() => {}} onHover={() => {}} />
-            : <QuotaCard snapshot={activePreview} preferences={preferences} providerCount={1} onPrevious={() => {}} onNext={() => {}} onTogglePin={() => {}} onLock={() => {}} onLanguage={() => {}} onDrag={() => {}} onHover={() => {}} />}
+            : <QuotaCard snapshot={activePreview} preferences={preferences} providerCount={1} onPrevious={() => {}} onNext={() => {}} onTogglePin={() => {}} onLock={() => {}} onToggleStayExpanded={() => {}} onDrag={() => {}} onHover={() => {}} />}
         </div>
       </section>
       <aside className="design-controls">
