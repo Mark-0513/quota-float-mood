@@ -45,8 +45,7 @@ targets:
     platform: macOS
     sources:
       - path: ../src-macos-widget-tests
-      - path: ../src-macos-widget/Core/QuotaModels.swift
-      - path: ../src-macos-widget/Core/QuotaMood.swift
+      - path: ../src-macos-widget/Core
 schemes:
   QuotaFloatSigningHost:
     build:
