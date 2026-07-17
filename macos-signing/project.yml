@@ -29,6 +29,9 @@ targets:
     platform: macOS
     sources:
       - path: ../src-macos-widget/QuotaFloatWidget.swift
+      - path: ../src-macos-widget/Core
+      - path: ../src-macos-widget/Data
+      - path: ../src-macos-widget/Views
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: app.quotafloat.desktop.widget
