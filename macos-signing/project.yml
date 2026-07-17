@@ -1,0 +1,58 @@
+name: QuotaFloatSigning
+options:
+  bundleIdPrefix: app.quotafloat
+  deploymentTarget:
+    macOS: "14.0"
+settings:
+  base:
+    CODE_SIGN_STYLE: Automatic
+    DEVELOPMENT_TEAM: 43XXA3LJDH
+    MACOSX_DEPLOYMENT_TARGET: "14.0"
+    SWIFT_VERSION: "5.0"
+targets:
+  QuotaFloatSigningHost:
+    type: application
+    platform: macOS
+    sources:
+      - path: SigningHost
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: app.quotafloat.desktop
+        PRODUCT_NAME: Quota Float
+        INFOPLIST_FILE: SigningHost/Info.plist
+        CODE_SIGN_IDENTITY: Apple Development
+    dependencies:
+      - target: QuotaFloatWidget
+        embed: true
+  QuotaFloatWidget:
+    type: app-extension
+    platform: macOS
+    sources:
+      - path: ../src-macos-widget/QuotaFloatWidget.swift
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: app.quotafloat.desktop.widget
+        PRODUCT_NAME: Quota Float Widget
+        INFOPLIST_FILE: ../src-macos-widget/Info.plist
+        CODE_SIGN_ENTITLEMENTS: ../src-macos-widget/QuotaFloatWidget.entitlements
+        CODE_SIGN_IDENTITY: Apple Development
+        APPLICATION_EXTENSION_API_ONLY: YES
+        SKIP_INSTALL: YES
+        CURRENT_PROJECT_VERSION: 2
+        MARKETING_VERSION: 0.1.5
+  QuotaFloatWidgetTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - path: ../src-macos-widget-tests
+      - path: ../src-macos-widget/Core/QuotaModels.swift
+      - path: ../src-macos-widget/Core/QuotaMood.swift
+schemes:
+  QuotaFloatSigningHost:
+    build:
+      targets:
+        QuotaFloatSigningHost: all
+        QuotaFloatWidget: all
+    test:
+      targets:
+        - QuotaFloatWidgetTests
