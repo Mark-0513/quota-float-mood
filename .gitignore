@@ -9,6 +9,9 @@
 /.chrome-qa
 /.chrome-qa2
 /.codex
+/.superpowers/
+/macos-signing/DerivedData*/
+/macos-signing/*.xcodeproj/
 /.codex-update-check-state.json
 /.idea
 /.vscode
