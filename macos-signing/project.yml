@@ -46,6 +46,7 @@ targets:
     sources:
       - path: ../src-macos-widget-tests
       - path: ../src-macos-widget/Core
+      - path: ../src-macos-widget/Data
 schemes:
   QuotaFloatSigningHost:
     build:
