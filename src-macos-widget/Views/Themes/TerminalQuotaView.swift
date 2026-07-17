@@ -16,6 +16,7 @@ struct TerminalQuotaPresentation {
 
     var showsPercentage: Bool { mood != .unavailable }
     var usesBrokenBar: Bool { mood == .critical }
+    var showsPlanBadge: Bool { mood != .unavailable }
 
     var accent: Color {
         switch mood {
@@ -185,13 +186,16 @@ struct TerminalMediumQuotaView: View {
                     .terminalFont(size: 8, weight: .medium)
                     .foregroundStyle(Color(red: 0.12, green: 0.78, blue: 0.36).opacity(0.62))
 
-                    HStack(spacing: 5) {
-                        PlanBadge(
-                            plan: model.plan,
-                            foreground: .black,
-                            background: presentation.accent
-                        )
+                    VStack(alignment: .leading, spacing: 4) {
+                        if presentation.showsPlanBadge {
+                            PlanBadge(
+                                plan: model.plan,
+                                foreground: .black,
+                                background: presentation.accent
+                            )
+                        }
                         CacheStatusLabel(source: model.source, tint: presentation.accent.opacity(0.82))
+                            .layoutPriority(1)
                     }
                 }
                 .frame(width: 137, alignment: .leading)
