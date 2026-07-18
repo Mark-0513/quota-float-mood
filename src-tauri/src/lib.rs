@@ -5,13 +5,20 @@ use std::{
     fs,
     io::Write,
     path::PathBuf,
-    sync::Mutex,
+    sync::{Arc, Mutex},
     time::{Duration, Instant},
 };
 
-use models::{ProviderSnapshot, WidgetPreferences};
+#[cfg(target_os = "macos")]
+use std::{
+    io::Read,
+    net::{TcpListener, TcpStream},
+    thread,
+};
+
 #[cfg(debug_assertions)]
 use models::UsageWindow;
+use models::{ProviderSnapshot, WidgetPreferences};
 use serde::Deserialize;
 use tauri::{
     menu::{CheckMenuItem, Menu, MenuItem},
@@ -95,17 +102,96 @@ struct AppState {
     preferences: Mutex<WidgetPreferences>,
     preferences_path: PathBuf,
     fetch_lock: tokio::sync::Mutex<()>,
-    snapshot_cache: Mutex<Option<(Instant, Vec<ProviderSnapshot>)>>,
+    snapshot_cache: Arc<Mutex<Option<(Instant, Vec<ProviderSnapshot>)>>>,
     #[cfg(debug_assertions)]
     simulate_short_window_for_testing: Mutex<bool>,
     geometry: Mutex<Option<WidgetGeometryState>>,
     drag_mode: Mutex<Option<WidgetMode>>,
 }
 
+#[cfg(target_os = "macos")]
+const WIDGET_SNAPSHOT_ADDRESS: &str = "127.0.0.1:47842";
+
+#[cfg(target_os = "macos")]
+fn widget_snapshot_body(
+    snapshot_cache: &Arc<Mutex<Option<(Instant, Vec<ProviderSnapshot>)>>>,
+) -> Vec<u8> {
+    let snapshots = snapshot_cache
+        .lock()
+        .ok()
+        .and_then(|cache| cache.as_ref().map(|(_, values)| values.clone()))
+        .unwrap_or_else(|| {
+            vec![ProviderSnapshot::failure(
+                "unavailable",
+                "Open Quota Float to refresh the macOS widget.",
+            )]
+        });
+    serde_json::to_vec(&snapshots).unwrap_or_else(|_| b"[]".to_vec())
+}
+
+#[cfg(target_os = "macos")]
+fn serve_widget_snapshot(
+    mut stream: TcpStream,
+    snapshot_cache: &Arc<Mutex<Option<(Instant, Vec<ProviderSnapshot>)>>>,
+) {
+    let _ = stream.set_read_timeout(Some(Duration::from_secs(2)));
+    let _ = stream.set_write_timeout(Some(Duration::from_secs(2)));
+
+    let mut request = [0_u8; 2048];
+    let Ok(bytes_read) = stream.read(&mut request) else {
+        return;
+    };
+    let request = String::from_utf8_lossy(&request[..bytes_read]);
+    let (status, content_type, body) = if request.starts_with("GET /snapshot ") {
+        (
+            "200 OK",
+            "application/json; charset=utf-8",
+            widget_snapshot_body(snapshot_cache),
+        )
+    } else if request.starts_with("GET /health ") {
+        ("200 OK", "text/plain; charset=utf-8", b"ok".to_vec())
+    } else {
+        (
+            "404 Not Found",
+            "text/plain; charset=utf-8",
+            b"not found".to_vec(),
+        )
+    };
+    let header = format!(
+        "HTTP/1.1 {status}\r\nContent-Type: {content_type}\r\nContent-Length: {}\r\nCache-Control: no-store\r\nConnection: close\r\n\r\n",
+        body.len()
+    );
+    let _ = stream.write_all(header.as_bytes());
+    let _ = stream.write_all(&body);
+    let _ = stream.flush();
+}
+
+#[cfg(target_os = "macos")]
+fn start_widget_snapshot_server(
+    snapshot_cache: Arc<Mutex<Option<(Instant, Vec<ProviderSnapshot>)>>>,
+) {
+    let _ = thread::Builder::new()
+        .name("quota-widget-snapshot".into())
+        .spawn(move || {
+            let listener = match TcpListener::bind(WIDGET_SNAPSHOT_ADDRESS) {
+                Ok(listener) => listener,
+                Err(_) => {
+                    eprintln!("macOS widget snapshot service is unavailable");
+                    return;
+                }
+            };
+            for stream in listener.incoming() {
+                match stream {
+                    Ok(stream) => serve_widget_snapshot(stream, &snapshot_cache),
+                    Err(_) => break,
+                }
+            }
+        });
+}
+
 fn apply_short_window_test_override(
     _state: &AppState,
-    #[allow(unused_mut)]
-    mut snapshots: Vec<ProviderSnapshot>,
+    #[allow(unused_mut)] mut snapshots: Vec<ProviderSnapshot>,
 ) -> Vec<ProviderSnapshot> {
     #[cfg(debug_assertions)]
     if _state
@@ -1142,12 +1228,15 @@ pub fn run() {
                 .user_agent("QuotaFloat/0.1")
                 .build()
                 .expect("static HTTP client configuration must be valid");
+            let snapshot_cache = Arc::new(Mutex::new(None));
+            #[cfg(target_os = "macos")]
+            start_widget_snapshot_server(Arc::clone(&snapshot_cache));
             app.manage(AppState {
                 client,
                 preferences: Mutex::new(preferences.clone()),
                 preferences_path,
                 fetch_lock: tokio::sync::Mutex::new(()),
-                snapshot_cache: Mutex::new(None),
+                snapshot_cache,
                 #[cfg(debug_assertions)]
                 simulate_short_window_for_testing: Mutex::new(false),
                 geometry: Mutex::new(None),

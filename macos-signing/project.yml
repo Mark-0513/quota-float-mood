@@ -6,7 +6,6 @@ options:
 settings:
   base:
     CODE_SIGN_STYLE: Automatic
-    DEVELOPMENT_TEAM: 43XXA3LJDH
     MACOSX_DEPLOYMENT_TARGET: "14.0"
     SWIFT_VERSION: "5.0"
 targets:
