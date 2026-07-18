@@ -74,6 +74,33 @@ final class QuotaSnapshotStoreTests: XCTestCase {
         XCTAssertEqual(SnapshotURLProtocol.requestCount, 1)
     }
 
+    func testNonOKSuccessfulResponseReturnsCacheWithoutOverwritingIt() async throws {
+        let now = Date(timeIntervalSince1970: 1_000_000)
+        let cached = CachedSnapshot(snapshot: snapshot(plan: "Cached Pro"), cachedAt: now.addingTimeInterval(-7_200))
+        let originalCacheData = try JSONEncoder().encode(cached)
+        defaults.set(originalCacheData, forKey: cacheKey)
+        let unavailable = snapshot(plan: nil, status: "unavailable", message: "Host is starting")
+        SnapshotURLProtocol.configure(response: .http(statusCode: 200, body: try JSONEncoder().encode([unavailable])))
+
+        let result = await makeStore().load(now: now)
+
+        XCTAssertEqual(result, QuotaLoadResult(snapshot: cached.snapshot, source: .cached(savedAt: cached.cachedAt, isOlderThanOneDay: false)))
+        XCTAssertEqual(defaults.data(forKey: cacheKey), originalCacheData)
+        XCTAssertEqual(SnapshotURLProtocol.requestCount, 1)
+    }
+
+    func testNonOKSuccessfulResponseWithoutCacheReturnsUnavailable() async throws {
+        let unavailable = snapshot(plan: nil, status: "unavailable", message: "Host is starting")
+        SnapshotURLProtocol.configure(response: .http(statusCode: 200, body: try JSONEncoder().encode([unavailable])))
+
+        let result = await makeStore().load(now: Date(timeIntervalSince1970: 1_000_000))
+
+        XCTAssertEqual(result.source, .unavailable(message: "请打开 Quota Float 刷新额度"))
+        XCTAssertEqual(result.snapshot.status, "unavailable")
+        XCTAssertNil(defaults.data(forKey: cacheKey))
+        XCTAssertEqual(SnapshotURLProtocol.requestCount, 1)
+    }
+
     private func makeStore() -> QuotaSnapshotStore {
         let configuration = URLSessionConfiguration.ephemeral
         configuration.protocolClasses = [SnapshotURLProtocol.self]
@@ -84,7 +111,11 @@ final class QuotaSnapshotStoreTests: XCTestCase {
         )
     }
 
-    private func snapshot(plan: String? = "Plus") -> ProviderSnapshot {
+    private func snapshot(
+        plan: String? = "Plus",
+        status: String = "ok",
+        message: String? = nil
+    ) -> ProviderSnapshot {
         ProviderSnapshot(
             provider: "codex",
             displayName: "CODEX",
@@ -94,8 +125,8 @@ final class QuotaSnapshotStoreTests: XCTestCase {
             resetCredits: 3,
             resetCreditExpiresAt: ["2026-07-20T12:34:56Z"],
             updatedAt: "2026-07-18T12:34:56Z",
-            status: "ok",
-            message: nil
+            status: status,
+            message: message
         )
     }
 }

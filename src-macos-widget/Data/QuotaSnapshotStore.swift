@@ -33,7 +33,8 @@ struct QuotaSnapshotStore {
             let (data, response) = try await session.data(for: request)
             guard let httpResponse = response as? HTTPURLResponse,
                   httpResponse.statusCode == 200,
-                  let snapshot = try JSONDecoder().decode([ProviderSnapshot].self, from: data).first
+                  let snapshot = try JSONDecoder().decode([ProviderSnapshot].self, from: data).first,
+                  snapshot.status == "ok"
             else {
                 return cachedResult(now: now)
             }
