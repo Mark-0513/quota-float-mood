@@ -39,7 +39,7 @@
     "category": "Utility",
     "shortDescription": "Codex quota at a glance",
     "longDescription": "A lightweight floating desktop card for Codex usage limits.",
-    "copyright": "Copyright Quota Float Mood contributors",
+    "copyright": "Copyright Quota Float contributors and Mark-0513 contributors",
     "icon": ["icons/32x32.png", "icons/128x128.png", "icons/128x128@2x.png", "icons/icon.icns", "icons/icon.ico"]
   }
 }

@@ -19,11 +19,19 @@ test("uses only the Mark-0513 release channel", () => {
   const operationalFiles = [
     "src/lib/appUpdate.ts",
     "src-tauri/capabilities/default.json",
+    "src-tauri/gen/schemas/capabilities.json",
     "src-tauri/tauri.conf.json",
     ".github/workflows/release.yml",
   ].map(read).join("\n");
   assert.match(operationalFiles, /Mark-0513\/quota-float-mood/);
   assert.doesNotMatch(operationalFiles, /change-42-yhmm\/quota-float\/releases/);
+});
+
+test("preserves upstream contributor attribution", () => {
+  const cargo = read("src-tauri/Cargo.toml");
+  const tauri = json("src-tauri/tauri.conf.json");
+  assert.match(cargo, /authors = \["Quota Float contributors and Mark-0513 contributors"\]/);
+  assert.equal(tauri.bundle.copyright, "Copyright Quota Float contributors and Mark-0513 contributors");
 });
 
 test("keeps host and widget identities isolated from upstream", () => {

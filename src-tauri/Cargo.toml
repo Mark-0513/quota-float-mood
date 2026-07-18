@@ -2,7 +2,7 @@
 name = "quota-float-mood"
 version = "0.2.0"
 description = "A lightweight floating Codex quota monitor"
-authors = ["Quota Float Mood contributors"]
+authors = ["Quota Float contributors and Mark-0513 contributors"]
 license = "MIT"
 edition = "2021"
 
