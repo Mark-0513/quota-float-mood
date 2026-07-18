@@ -1,21 +1,23 @@
-# Quota Float Mood v0.2.0
+# Quota Float Mood v0.2.1
 
 ## 下载
 
 适用于 Intel 与 Apple 芯片 Mac、需要 macOS 14 或更高版本。使用前必须已安装并登录 Codex Desktop。
 
-- `Quota-Float-Mood-v0.2.0-macOS-Universal.dmg`
-- `Quota-Float-Mood-v0.2.0-macOS-Universal.dmg.sha256`
+- `Quota-Float-Mood-v0.2.1-macOS-Universal.dmg`
+- `Quota-Float-Mood-v0.2.1-macOS-Universal.dmg.sha256`
+
+v0.2.1 修正主 App 最低系统版本元数据，现与 Widget 一致为 macOS 14+。
 
 下载 DMG 后，将 `Quota Float Mood.app` 拖到 Applications。使用校验文件确认下载完整：
 
 ```bash
-shasum -a 256 -c Quota-Float-Mood-v0.2.0-macOS-Universal.dmg.sha256
+shasum -a 256 -c Quota-Float-Mood-v0.2.1-macOS-Universal.dmg.sha256
 ```
 
 ## 未签名/ad-hoc beta 与 Gatekeeper
 
-v0.2.0 是未签名、未公证的 ad-hoc beta，Gatekeeper 可能阻止首次启动。按住 Control（或右键）点击 App，选择“打开”，再在系统提示中选择“打开”。如仍被阻止，请到“系统设置 → 隐私与安全性”选择 **Open Anyway/仍要打开**。本 beta 不声明已经通过 Gatekeeper 接受。
+v0.2.1 是未签名、未公证的 ad-hoc beta，Gatekeeper 可能阻止首次启动。按住 Control（或右键）点击 App，选择“打开”，再在系统提示中选择“打开”。如仍被阻止，请到“系统设置 → 隐私与安全性”选择 **Open Anyway/仍要打开**。本 beta 不声明已经通过 Gatekeeper 接受。
 
 ## 隐私
 

@@ -6,13 +6,15 @@
 
 [👉 下载最新版](https://github.com/Mark-0513/quota-float-mood/releases)
 
-普通用户只需要下载：`Quota-Float-Mood-v0.2.0-macOS-Universal.dmg`
+普通用户只需要下载：`Quota-Float-Mood-v0.2.1-macOS-Universal.dmg`
 
 支持 Intel 与 Apple 芯片 Mac，需要 macOS 14 或更高版本。需要本机已安装并登录 Codex Desktop。
 
+v0.2.1 修正主 App 最低系统版本元数据，现与 Widget 一致为 macOS 14+。
+
 ## 安装
 
-> **Beta 提示：** v0.2.0 是未签名/ad-hoc beta，尚未经过 Apple notarization；首次打开可能会被 Gatekeeper 拦截。
+> **Beta 提示：** v0.2.1 是未签名/ad-hoc beta，尚未经过 Apple notarization；首次打开可能会被 Gatekeeper 拦截。
 
 1. 下载并打开 DMG。
 2. 把 Quota Float Mood 拖进“应用程序”。

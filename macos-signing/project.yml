@@ -19,7 +19,7 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.mark0513.quotafloatmood
         PRODUCT_NAME: Quota Float Mood
-        MARKETING_VERSION: 0.2.0
+        MARKETING_VERSION: 0.2.1
         INFOPLIST_FILE: $(QUOTA_FLOAT_SOURCE_ROOT)/macos-signing/SigningHost/Info.plist
         CODE_SIGN_IDENTITY: Apple Development
     dependencies:
@@ -42,8 +42,8 @@ targets:
         CODE_SIGN_IDENTITY: Apple Development
         APPLICATION_EXTENSION_API_ONLY: YES
         SKIP_INSTALL: YES
-        CURRENT_PROJECT_VERSION: 0.2.0
-        MARKETING_VERSION: 0.2.0
+        CURRENT_PROJECT_VERSION: 0.2.1
+        MARKETING_VERSION: 0.2.1
   QuotaFloatMoodWidgetTests:
     type: bundle.unit-test
     platform: macOS

@@ -21,9 +21,9 @@ test("uses the Quota Float Mood product identity", () => {
   const pkg = json("package.json");
   const tauri = json("src-tauri/tauri.conf.json");
   assert.equal(pkg.name, "quota-float-mood");
-  assert.equal(pkg.version, "0.2.0");
+  assert.equal(pkg.version, "0.2.1");
   assert.equal(tauri.productName, "Quota Float Mood");
-  assert.equal(tauri.version, "0.2.0");
+  assert.equal(tauri.version, "0.2.1");
   assert.equal(tauri.identifier, "com.mark0513.quotafloatmood");
 });
 
@@ -74,10 +74,10 @@ test("keeps host and widget identities isolated from upstream", () => {
   assert.match(project, /PRODUCT_BUNDLE_IDENTIFIER: com\.mark0513\.quotafloatmood$/m);
   assert.match(project, /PRODUCT_BUNDLE_IDENTIFIER: com\.mark0513\.quotafloatmood\.widget$/m);
   assert.match(project, /PRODUCT_NAME: Quota Float Mood$/m);
-  assert.match(project, /MARKETING_VERSION: 0\.2\.0$/m);
-  assert.match(project, /CURRENT_PROJECT_VERSION: 0\.2\.0$/m);
-  assert.match(signingHostInfo, /<key>CFBundleVersion<\/key>\s*<string>0\.2\.0<\/string>/);
-  assert.match(widgetInfo, /<key>CFBundleVersion<\/key>\s*<string>0\.2\.0<\/string>/);
+  assert.match(project, /MARKETING_VERSION: 0\.2\.1$/m);
+  assert.match(project, /CURRENT_PROJECT_VERSION: 0\.2\.1$/m);
+  assert.match(signingHostInfo, /<key>CFBundleVersion<\/key>\s*<string>0\.2\.1<\/string>/);
+  assert.match(widgetInfo, /<key>CFBundleVersion<\/key>\s*<string>0\.2\.1<\/string>/);
 });
 
 test("requires macOS 14 for the Tauri host app", () => {
@@ -87,13 +87,14 @@ test("requires macOS 14 for the Tauri host app", () => {
 
 test("publishes one documented universal DMG", () => {
   const readme = read("README.md");
-  assert.match(readme, /Quota-Float-Mood-v0\.2\.0-macOS-Universal\.dmg/);
+  assert.match(readme, /Quota-Float-Mood-v0\.2\.1-macOS-Universal\.dmg/);
   assert.match(readme, /macOS 14/);
   assert.match(readme, /Star/);
   assert.match(readme, /完全免费/);
   assert.match(readme, /是否支持完全自愿/);
   assert.match(readme, /Mark-0513/);
-  assert.match(readme, /v0\.2\.0.*未签名\/ad-hoc beta/);
+  assert.match(readme, /v0\.2\.1.*未签名\/ad-hoc beta/);
+  assert.match(readme, /修正主 App 最低系统版本元数据，现与 Widget 一致为 macOS 14\+/);
   assert.match(readme, /Control\/右键点击.*打开.*打开/);
   assert.match(readme, /系统设置.*隐私与安全性.*Open Anyway/);
   assert.match(readme, /change-42-yhmm\/quota-float/);
@@ -127,13 +128,25 @@ test("fails closed when the release tag, version, repository, or assets do not m
   assert.match(releaseWorkflow, /DMG_NAME="Quota-Float-Mood-v\$\{VERSION\}-macOS-Universal\.dmg"/);
   assert.match(releaseWorkflow, /fail_on_unmatched_files: true/);
   assert.match(releaseWorkflow, /overwrite_files: false/);
-  assert.doesNotMatch(releaseWorkflow, /Quota Float Mood v0\.2\.0/);
-  assert.doesNotMatch(releaseWorkflow, /Quota-Float-Mood-v0\.2\.0-macOS-Universal\.dmg/);
+  assert.doesNotMatch(releaseWorkflow, /Quota Float Mood v0\.2\.1/);
+  assert.doesNotMatch(releaseWorkflow, /Quota-Float-Mood-v0\.2\.1-macOS-Universal\.dmg/);
 });
 
 test("requires an installed and signed-in Codex Desktop in release notes", () => {
   const releaseTemplate = read("docs/RELEASE_TEMPLATE.md");
   assert.match(releaseTemplate, /已安装并登录 Codex Desktop/);
+  assert.match(releaseTemplate, /Quota Float Mood v0\.2\.1/);
+  assert.match(releaseTemplate, /Quota-Float-Mood-v0\.2\.1-macOS-Universal\.dmg/);
+  assert.match(releaseTemplate, /修正主 App 最低系统版本元数据，现与 Widget 一致为 macOS 14\+/);
+});
+
+test("documents v0.2.1 as the current prerelease", () => {
+  const checklist = read("docs/GITHUB-RELEASE-CHECKLIST.md");
+  assert.match(checklist, /当前发布版本是 `v0\.2\.1`/);
+  assert.match(checklist, /首个公开版本是 `v0\.2\.0`/);
+  assert.equal((checklist.match(/v0\.2\.0/g) ?? []).length, 1);
+  assert.match(checklist, /git tag -a v0\.2\.1 -m "Quota Float Mood v0\.2\.1"/);
+  assert.match(checklist, /Quota-Float-Mood-v0\.2\.1-macOS-Universal\.dmg/);
 });
 
 test("builds the documented universal DMG", () => {
