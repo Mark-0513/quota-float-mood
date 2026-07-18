@@ -108,7 +108,7 @@ test("publishes the documented macOS prerelease workflow", () => {
 test("installs official Tauri Linux prerequisites before Rust tests", () => {
   const ciWorkflow = read(".github/workflows/ci.yml");
   assert.match(ciWorkflow, /DEBIAN_FRONTEND=noninteractive apt-get update/);
-  assert.match(ciWorkflow, /DEBIAN_FRONTEND=noninteractive apt-get install -y[\s\S]*build-essential[\s\S]*curl[\s\S]*wget[\s\S]*file[\s\S]*libxdo-dev[\s\S]*libssl-dev[\s\S]*libayatana-appindicator3-dev[\s\S]*librsvg2-dev[\s\S]*libwebkit2gtk-4\.1-dev/);
+  assert.match(ciWorkflow, /DEBIAN_FRONTEND=noninteractive apt-get install -y[\s\S]*build-essential[\s\S]*curl[\s\S]*wget[\s\S]*file[\s\S]*zsh[\s\S]*libxdo-dev[\s\S]*libssl-dev[\s\S]*libayatana-appindicator3-dev[\s\S]*librsvg2-dev[\s\S]*libwebkit2gtk-4\.1-dev/);
   assert.ok(ciWorkflow.indexOf("apt-get install") < ciWorkflow.indexOf("cargo test --manifest-path src-tauri/Cargo.toml"));
 });
 

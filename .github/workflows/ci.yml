@@ -25,6 +25,7 @@ jobs:
             curl \
             wget \
             file \
+            zsh \
             libxdo-dev \
             libssl-dev \
             libayatana-appindicator3-dev \
