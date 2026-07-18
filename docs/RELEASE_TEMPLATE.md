@@ -2,7 +2,7 @@
 
 ## 下载
 
-适用于 Intel 与 Apple 芯片 Mac、需要 macOS 14 或更高版本：
+适用于 Intel 与 Apple 芯片 Mac、需要 macOS 14 或更高版本。使用前必须已安装并登录 Codex Desktop。
 
 - `Quota-Float-Mood-v0.2.0-macOS-Universal.dmg`
 - `Quota-Float-Mood-v0.2.0-macOS-Universal.dmg.sha256`

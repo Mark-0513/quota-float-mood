@@ -10,6 +10,7 @@ permissions:
 
 jobs:
   publish:
+    if: github.repository == 'Mark-0513/quota-float-mood'
     name: Publish macOS unsigned/ad-hoc beta
     runs-on: macos-latest
     steps:
@@ -29,15 +30,33 @@ jobs:
         with:
           workspaces: src-tauri
       - run: npm ci
+      - name: Resolve release metadata
+        id: release_metadata
+        env:
+          TAG_NAME: ${{ github.ref_name }}
+        run: |
+          VERSION="$(node -p "require('./package.json').version")"
+          EXPECTED_TAG="v${VERSION}"
+          [[ "$TAG_NAME" == "$EXPECTED_TAG" ]] || {
+            echo "tag/version mismatch: expected $EXPECTED_TAG, received $TAG_NAME" >&2
+            exit 1
+          }
+          DMG_NAME="Quota-Float-Mood-v${VERSION}-macOS-Universal.dmg"
+          printf 'release_name=Quota Float Mood v%s\n' "$VERSION" >> "$GITHUB_OUTPUT"
+          printf 'dmg_path=release/%s\n' "$DMG_NAME" >> "$GITHUB_OUTPUT"
+          printf 'checksum_path=release/%s.sha256\n' "$DMG_NAME" >> "$GITHUB_OUTPUT"
       - run: npm run test:release-contract
       - name: Build the unsigned/ad-hoc universal beta
         run: SIGN_IDENTITY=- NOTARIZE=0 scripts/build-macos-distribution.sh
-      - name: Publish v0.2.0 macOS beta assets
+      - name: Publish macOS beta assets
         uses: softprops/action-gh-release@v2
         with:
-          name: Quota Float Mood v0.2.0
+          tag_name: ${{ github.ref_name }}
+          name: ${{ steps.release_metadata.outputs.release_name }}
           body_path: docs/RELEASE_TEMPLATE.md
           prerelease: true
+          fail_on_unmatched_files: true
+          overwrite_files: false
           files: |
-            release/Quota-Float-Mood-v0.2.0-macOS-Universal.dmg
-            release/Quota-Float-Mood-v0.2.0-macOS-Universal.dmg.sha256
+            ${{ steps.release_metadata.outputs.dmg_path }}
+            ${{ steps.release_metadata.outputs.checksum_path }}

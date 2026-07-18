@@ -79,8 +79,35 @@ test("publishes one documented universal DMG", () => {
 test("publishes the documented macOS prerelease workflow", () => {
   const releaseWorkflow = read(".github/workflows/release.yml");
   assert.match(releaseWorkflow, /scripts\/build-macos-distribution\.sh/);
-  assert.match(releaseWorkflow, /Quota-Float-Mood-v0\.2\.0-macOS-Universal\.dmg/);
   assert.match(releaseWorkflow, /prerelease: true/);
+  assert.match(releaseWorkflow, /\$\{\{ steps\.release_metadata\.outputs\.dmg_path \}\}/);
+  assert.match(releaseWorkflow, /\$\{\{ steps\.release_metadata\.outputs\.checksum_path \}\}/);
+});
+
+test("installs official Tauri Linux prerequisites before Rust tests", () => {
+  const ciWorkflow = read(".github/workflows/ci.yml");
+  assert.match(ciWorkflow, /DEBIAN_FRONTEND=noninteractive apt-get update/);
+  assert.match(ciWorkflow, /DEBIAN_FRONTEND=noninteractive apt-get install -y[\s\S]*build-essential[\s\S]*curl[\s\S]*wget[\s\S]*file[\s\S]*libxdo-dev[\s\S]*libssl-dev[\s\S]*libayatana-appindicator3-dev[\s\S]*librsvg2-dev[\s\S]*libwebkit2gtk-4\.1-dev/);
+  assert.ok(ciWorkflow.indexOf("apt-get install") < ciWorkflow.indexOf("cargo test --manifest-path src-tauri/Cargo.toml"));
+});
+
+test("fails closed when the release tag, version, repository, or assets do not match", () => {
+  const releaseWorkflow = read(".github/workflows/release.yml");
+  assert.match(releaseWorkflow, /if: github\.repository == 'Mark-0513\/quota-float-mood'/);
+  assert.match(releaseWorkflow, /id: release_metadata/);
+  assert.match(releaseWorkflow, /VERSION="\$\(node -p "require\('\.\/package\.json'\)\.version"\)"/);
+  assert.match(releaseWorkflow, /EXPECTED_TAG="v\$\{VERSION\}"/);
+  assert.match(releaseWorkflow, /\[\[ "\$TAG_NAME" == "\$EXPECTED_TAG" \]\]/);
+  assert.match(releaseWorkflow, /DMG_NAME="Quota-Float-Mood-v\$\{VERSION\}-macOS-Universal\.dmg"/);
+  assert.match(releaseWorkflow, /fail_on_unmatched_files: true/);
+  assert.match(releaseWorkflow, /overwrite_files: false/);
+  assert.doesNotMatch(releaseWorkflow, /Quota Float Mood v0\.2\.0/);
+  assert.doesNotMatch(releaseWorkflow, /Quota-Float-Mood-v0\.2\.0-macOS-Universal\.dmg/);
+});
+
+test("requires an installed and signed-in Codex Desktop in release notes", () => {
+  const releaseTemplate = read("docs/RELEASE_TEMPLATE.md");
+  assert.match(releaseTemplate, /已安装并登录 Codex Desktop/);
 });
 
 test("builds the documented universal DMG", () => {
