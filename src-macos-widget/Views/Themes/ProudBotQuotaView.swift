@@ -9,6 +9,19 @@ enum ProudBotFaceState: Equatable {
     case radar
 }
 
+enum ProudBotPlanPolicy {
+    static let mediumMinimumScaleFactor: CGFloat = 1
+
+    static func mediumLabel(_ plan: String?) -> String {
+        let normalized = plan?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .uppercased()
+        let label = normalized.flatMap { $0.isEmpty ? nil : $0 } ?? "PLAN --"
+        guard label.count > 21 else { return label }
+        return String(label.prefix(21)) + "…"
+    }
+}
+
 struct ProudBotQuotaPresentation {
     let mood: QuotaMood
 
@@ -209,12 +222,11 @@ struct ProudBotMediumQuotaView: View {
                                 .font(.system(size: 9, weight: .black, design: .monospaced))
                                 .foregroundStyle(ProudBotPalette.paper)
                             HStack(spacing: 5) {
-                                Text(model.plan?.uppercased() ?? "PLAN --")
-                                    .font(.system(size: 7, weight: .bold, design: .monospaced))
+                                Text(ProudBotPlanPolicy.mediumLabel(model.plan))
+                                    .font(.system(size: 7.5, weight: .bold, design: .monospaced))
                                     .foregroundStyle(presentation.accent.opacity(0.82))
                                     .lineLimit(1)
-                                    .minimumScaleFactor(0.40)
-                                    .allowsTightening(true)
+                                    .truncationMode(.tail)
                                 Spacer(minLength: 2)
                                 CacheStatusLabel(source: model.source, tint: presentation.accent.opacity(0.80))
                             }

@@ -9,6 +9,19 @@ enum StickerMark: Equatable {
     case lostSignal
 }
 
+enum StickerPlanPolicy {
+    static let fixedTitleLayoutPriority = 1.0
+
+    static func smallTagText(_ plan: String?) -> String {
+        let normalized = plan?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .uppercased()
+        let label = normalized.flatMap { $0.isEmpty ? nil : $0 } ?? "PLAN --"
+        guard label.count > 10 else { return label }
+        return String(label.prefix(10)) + "…"
+    }
+}
+
 struct StickerQuotaPresentation {
     let mood: QuotaMood
 
@@ -101,8 +114,10 @@ struct StickerSmallQuotaView: View {
                         .font(.system(size: 9, weight: .black, design: .rounded))
                         .tracking(0.8)
                         .foregroundStyle(StickerPalette.ink)
+                        .fixedSize(horizontal: true, vertical: false)
+                        .layoutPriority(StickerPlanPolicy.fixedTitleLayoutPriority)
                     Spacer(minLength: 2)
-                    StickerPlanTag(plan: model.plan, color: presentation.secondaryAccent)
+                    StickerPlanTag(plan: model.plan, color: presentation.secondaryAccent, compact: true)
                         .rotationEffect(.degrees(3))
                 }
 
@@ -438,8 +453,12 @@ private struct StickerProgressTape: View {
 private struct StickerPlanTag: View {
     let plan: String?
     let color: Color
+    var compact = false
 
     private var text: String {
+        if compact {
+            return StickerPlanPolicy.smallTagText(plan)
+        }
         let trimmed = plan?.trimmingCharacters(in: .whitespacesAndNewlines)
         return trimmed.flatMap { $0.isEmpty ? nil : $0.uppercased() } ?? "PLAN --"
     }
@@ -450,6 +469,7 @@ private struct StickerPlanTag: View {
             .foregroundStyle(StickerPalette.ink)
             .lineLimit(1)
             .minimumScaleFactor(0.45)
+            .frame(maxWidth: compact ? 54 : nil)
             .padding(.horizontal, 5)
             .padding(.vertical, 3)
             .background(color)
