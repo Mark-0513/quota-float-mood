@@ -4,7 +4,7 @@
 
 ## 免费下载
 
-[👉 下载最新版](https://github.com/Mark-0513/quota-float-mood/releases/latest)
+[👉 下载最新版](https://github.com/Mark-0513/quota-float-mood/releases)
 
 普通用户只需要下载：`Quota-Float-Mood-v0.2.0-macOS-Universal.dmg`
 

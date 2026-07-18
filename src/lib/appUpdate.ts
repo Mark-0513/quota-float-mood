@@ -1,7 +1,7 @@
 import { isTauri } from "./bridge";
 import type { Language } from "../types";
 
-export const RELEASE_URL = "https://github.com/Mark-0513/quota-float-mood/releases/latest";
+export const RELEASE_URL = "https://github.com/Mark-0513/quota-float-mood/releases";
 
 export interface UpdateMessages {
   checking: string;

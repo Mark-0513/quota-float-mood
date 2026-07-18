@@ -28,15 +28,36 @@ test("uses the Quota Float Mood product identity", () => {
 });
 
 test("uses only the Mark-0513 release channel", () => {
+  const releasesUrl = "https://github.com/Mark-0513/quota-float-mood/releases";
+  const appUpdate = read("src/lib/appUpdate.ts");
+  const readme = read("README.md");
+  const sourceCapabilities = json("src-tauri/capabilities/default.json");
+  const generatedCapabilities = json("src-tauri/gen/schemas/capabilities.json");
   const operationalFiles = [
-    "src/lib/appUpdate.ts",
-    "src-tauri/capabilities/default.json",
-    "src-tauri/gen/schemas/capabilities.json",
-    "src-tauri/tauri.conf.json",
-    ".github/workflows/release.yml",
-  ].map(read).join("\n");
+    appUpdate,
+    read("src-tauri/capabilities/default.json"),
+    read("src-tauri/gen/schemas/capabilities.json"),
+    read("src-tauri/tauri.conf.json"),
+    read(".github/workflows/release.yml"),
+  ].join("\n");
   assert.match(operationalFiles, /Mark-0513\/quota-float-mood/);
   assert.doesNotMatch(operationalFiles, /change-42-yhmm\/quota-float\/releases/);
+  assert.ok(appUpdate.includes(`RELEASE_URL = "${releasesUrl}"`));
+  assert.ok(readme.includes(`[👉 下载最新版](${releasesUrl})`));
+  assert.doesNotMatch(`${appUpdate}\n${readme}`, /releases\/latest/);
+
+  const expectedScope = [
+    { url: releasesUrl },
+    { url: `${releasesUrl}/*` },
+  ];
+  const sourceOpener = sourceCapabilities.permissions.find(
+    (permission) => permission.identifier === "opener:allow-open-url",
+  );
+  const generatedOpener = generatedCapabilities.default.permissions.find(
+    (permission) => permission.identifier === "opener:allow-open-url",
+  );
+  assert.deepEqual(sourceOpener.allow, expectedScope);
+  assert.deepEqual(generatedOpener.allow, expectedScope);
 });
 
 test("preserves upstream contributor attribution", () => {
