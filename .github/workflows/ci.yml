@@ -5,7 +5,7 @@ on:
   pull_request:
 
 jobs:
-  frontend:
+  source-contract:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -13,25 +13,19 @@ jobs:
         with:
           node-version: 22
           cache: npm
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
       - run: npm ci
       - run: npm test
+      - run: cargo test --manifest-path src-tauri/Cargo.toml
+      - run: npm run test:release-contract
       - run: npm run build
       - run: npm audit --audit-level=high
 
-  desktop:
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - os: windows-latest
-            artifact-name: quota-float-windows-unsigned
-            build-command: npm run tauri -- build
-            artifact-path: src-tauri/target/release/bundle/**
-          - os: macos-latest
-            artifact-name: quota-float-macos-universal-unsigned
-            build-command: npm run tauri -- build --target universal-apple-darwin
-            artifact-path: src-tauri/target/universal-apple-darwin/release/bundle/**
-    runs-on: ${{ matrix.os }}
+  macos-package-smoke:
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -40,17 +34,12 @@ jobs:
           cache: npm
       - uses: dtolnay/rust-toolchain@stable
       - name: Install macOS universal targets
-        if: runner.os == 'macOS'
         run: rustup target add aarch64-apple-darwin x86_64-apple-darwin
+      - name: Install XcodeGen
+        run: brew install xcodegen
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: src-tauri
       - run: npm ci
-      - run: cargo test --manifest-path src-tauri/Cargo.toml
-      - run: ${{ matrix.build-command }}
-      - uses: actions/upload-artifact@v4
-        with:
-          name: ${{ matrix.artifact-name }}
-          path: ${{ matrix.artifact-path }}
-          if-no-files-found: error
-          retention-days: 14
+      - name: Build the unsigned/ad-hoc universal package
+        run: SIGN_IDENTITY=- NOTARIZE=0 scripts/build-macos-distribution.sh

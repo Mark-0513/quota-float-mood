@@ -10,50 +10,34 @@ permissions:
 
 jobs:
   publish:
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - platform: windows-latest
-            args: ""
-          - platform: macos-latest
-            args: "--target universal-apple-darwin"
-    runs-on: ${{ matrix.platform }}
+    name: Publish macOS unsigned/ad-hoc beta
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
       - uses: dtolnay/rust-toolchain@stable
       - name: Install macOS universal targets
-        if: runner.os == 'macOS'
         run: rustup target add aarch64-apple-darwin x86_64-apple-darwin
+      - name: Install XcodeGen
+        run: brew install xcodegen
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: src-tauri
       - run: npm ci
-      - run: npm test
-      - run: cargo test --manifest-path src-tauri/Cargo.toml
-      - uses: tauri-apps/tauri-action@v0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - run: npm run test:release-contract
+      - name: Build the unsigned/ad-hoc universal beta
+        run: SIGN_IDENTITY=- NOTARIZE=0 scripts/build-macos-distribution.sh
+      - name: Publish v0.2.0 macOS beta assets
+        uses: softprops/action-gh-release@v2
         with:
-          tagName: v__VERSION__
-          releaseName: Quota Float Mood v__VERSION__
-          releaseBody: |
-            ## What's new
-
-            - Keeps showing weekly quota when the 5-hour window is temporarily unavailable, with a clear `W` badge.
-            - Adds persistent expansion, clearer active controls, exact reset time, and localized tray actions.
-            - Opens the GitHub Releases page for manual update checks.
-            - Improves edge docking and transparent rounded-window rendering on Windows and macOS.
-
-            ![Quota Float Mood weekly quota fallback](https://raw.githubusercontent.com/Mark-0513/quota-float-mood/main/docs/images/quota-v0.1.4-weekly-fallback.png)
-
-            ## Privacy
-
-            Quota Float Mood remains local-first: it reads the existing Codex Desktop login state only for quota requests and does not upload prompts, chats, raw quota responses, or local credentials.
-          releaseDraft: false
-          prerelease: false
-          args: ${{ matrix.args }}
+          name: Quota Float Mood v0.2.0
+          body_path: docs/RELEASE_TEMPLATE.md
+          prerelease: true
+          files: |
+            release/Quota-Float-Mood-v0.2.0-macOS-Universal.dmg
+            release/Quota-Float-Mood-v0.2.0-macOS-Universal.dmg.sha256

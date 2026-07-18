@@ -1,84 +1,53 @@
-# GitHub 发布与分享清单
+# Quota Float Mood GitHub 发布清单
 
-## 需要提前安装或准备什么
+目标仓库：[`Mark-0513/quota-float-mood`](https://github.com/Mark-0513/quota-float-mood)。首个公开版本是 `v0.2.0` 的 prerelease，仅面向 macOS 14+。
 
-本机 Windows 不需要安装 macOS 构建工具，也不能直接构建 macOS 安装包。macOS 包由 GitHub Actions 的 `macos-latest` runner 构建。
+## 发布前
 
-本机需要：
+- 确认当前版本是 `0.2.0`，并且工作区没有待提交的发布文件。
+- 在 macOS 上运行：
 
-- Git
-- Node.js 20+
-- Rust stable
-- npm 依赖已安装
+  ```bash
+  npm ci
+  npm run test:release-contract
+  SIGN_IDENTITY=- NOTARIZE=0 scripts/build-macos-distribution.sh
+  shasum -a 256 -c release/Quota-Float-Mood-v0.2.0-macOS-Universal.dmg.sha256
+  ```
 
-GitHub 需要：
+- 确认输出只有用户下载所需的两个文件：
+  - `Quota-Float-Mood-v0.2.0-macOS-Universal.dmg`
+  - `Quota-Float-Mood-v0.2.0-macOS-Universal.dmg.sha256`
+- 确认构建日志明确显示 `unsigned/ad-hoc beta; not notarized`，不要把它描述成已签名或已公证。
+- 确认 `NOTICE.md` 保留对上游 [change-42-yhmm/quota-float](https://github.com/change-42-yhmm/quota-float) 的 MIT 许可和贡献者归属说明。
 
-- 一个 GitHub 仓库
-- GitHub Actions 已启用
-- 代码已推送到默认分支
+## 创建 v0.2.0 prerelease
 
-macOS Universal 构建需要的 Rust targets 已经在 CI/release workflow 中自动安装：
-
-```bash
-rustup target add aarch64-apple-darwin x86_64-apple-darwin
-```
-
-你不需要在 Windows 本机安装这两个 target。
-
-## 第一次上传到 GitHub
-
-如果本地仓库还没有 remote，先在 GitHub 创建一个空仓库，然后执行：
+推送已验证提交和 tag：
 
 ```bash
-git remote add origin https://github.com/<owner>/<repo>.git
-git branch -M main
-git add .
-git commit -m "Prepare Windows and macOS unsigned release"
-git push -u origin main
-```
-
-如果已经有 remote，只需要：
-
-```bash
-git add .
-git commit -m "Prepare Windows and macOS unsigned release"
 git push origin main
+git tag -a v0.2.0 -m "Quota Float Mood v0.2.0"
+git push origin v0.2.0
 ```
 
-## 生成可分享版本
+`Release` workflow 会在 `macos-latest` 上检出该 tag，执行发布契约检查，并使用 `SIGN_IDENTITY=- NOTARIZE=0 scripts/build-macos-distribution.sh` 构建。它会创建 `prerelease: true` 的 GitHub Release 并上传上面的 DMG 与校验文件；不需要 Apple 证书、私钥或公证凭据。
 
-推送 `v*` tag 会触发 release workflow：
+在 Actions 成功后，到 <https://github.com/Mark-0513/quota-float-mood/releases> 核对：
 
-```bash
-git tag v0.1.0
-git push origin v0.1.0
-```
+- Release 是 **Pre-release**，标题为 `Quota Float Mood v0.2.0`。
+- 只附带上述 DMG 和 `.sha256` 两个发布资产。
+- Release 正文包含 macOS 14+、上游归属和未签名/ad-hoc beta 提示。
 
-构建完成后，到 GitHub 仓库的 Releases 页面检查 draft release。附件应包含：
+## 给测试用户的安装说明
 
-- `quota-float-windows-unsigned.zip`
-- `quota-float-macos-universal-unsigned.zip`
+v0.2.0 是未签名、未公证的 ad-hoc beta。请只下载 `Quota-Float-Mood-v0.2.0-macOS-Universal.dmg`，它支持 Intel 与 Apple 芯片的 macOS 14+ Mac。
 
-确认无误后点击 Publish release，然后把 Release 链接发给用户。
+1. 打开 DMG，把 `Quota Float Mood.app` 拖到 Applications。
+2. 首次启动时按住 Control（或右键）点击 App，选择“打开”，再在系统提示中选择“打开”。
+3. 如果仍被 Gatekeeper 拦截，到“系统设置 → 隐私与安全性”，选择 **Open Anyway/仍要打开**。
 
-## 发给 Mac 用户时的说明
+不要承诺 Gatekeeper 已接受此 beta，也不要把可选赞助与功能权限绑定。
 
-当前 macOS 包是 unsigned 包。用户首次打开可能会被 Gatekeeper 拦截，可以这样打开：
+## 后续 Developer ID 升级
 
-1. 下载 `quota-float-macos-universal-unsigned.zip`。
-2. 解压后把应用拖到 Applications 或任意测试目录。
-3. 右键点击应用，选择 Open。
-4. 在系统提示里再次选择 Open。
-5. 如果仍被拦截，到 System Settings -> Privacy & Security 里允许打开。
-
-## 以后公开分发还需要什么
-
-如果要面向非技术用户公开分发，建议补：
-
-- Windows 代码签名证书。
-- Apple Developer ID Application 证书。
-- Apple Team ID。
-- Apple app-specific password。
-- GitHub Secrets 中的签名和公证配置。
-
-这些账号、证书和密码不能由代码生成，需要项目所有者申请或购买。
+面向普通用户广泛分发前，项目所有者需要准备 Apple Developer Program、Developer ID Application 证书和 `notarytool` 凭据。届时在受控 CI 环境中使用 `SIGN_IDENTITY="Developer ID Application: ..."`、`NOTARIZE=1` 和密钥链 profile 构建，完成 notarization、staple 以及对同一公开 DMG 的 `spctl` 检查后，才可以删除未签名 beta 提示。证书、私钥、Apple 凭据和 GitHub token 都不能提交到仓库。

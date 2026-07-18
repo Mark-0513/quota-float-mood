@@ -76,6 +76,13 @@ test("publishes one documented universal DMG", () => {
   assert.match(read("NOTICE.md"), /MIT License/);
 });
 
+test("publishes the documented macOS prerelease workflow", () => {
+  const releaseWorkflow = read(".github/workflows/release.yml");
+  assert.match(releaseWorkflow, /scripts\/build-macos-distribution\.sh/);
+  assert.match(releaseWorkflow, /Quota-Float-Mood-v0\.2\.0-macOS-Universal\.dmg/);
+  assert.match(releaseWorkflow, /prerelease: true/);
+});
+
 test("builds the documented universal DMG", () => {
   const script = read("scripts/build-macos-distribution.sh");
   const embedScript = read("scripts/embed-macos-widget.sh");
