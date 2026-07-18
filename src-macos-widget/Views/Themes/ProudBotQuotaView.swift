@@ -221,14 +221,19 @@ struct ProudBotMediumQuotaView: View {
                             Text("QUOTA CORE")
                                 .font(.system(size: 9, weight: .black, design: .monospaced))
                                 .foregroundStyle(ProudBotPalette.paper)
-                            HStack(spacing: 5) {
-                                Text(ProudBotPlanPolicy.mediumLabel(model.plan))
-                                    .font(.system(size: 7.5, weight: .bold, design: .monospaced))
-                                    .foregroundStyle(presentation.accent.opacity(0.82))
-                                    .lineLimit(1)
-                                    .truncationMode(.tail)
-                                Spacer(minLength: 2)
+                            if case .unavailable = model.source {
                                 CacheStatusLabel(source: model.source, tint: presentation.accent.opacity(0.80))
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                            } else {
+                                HStack(spacing: 5) {
+                                    Text(ProudBotPlanPolicy.mediumLabel(model.plan))
+                                        .font(.system(size: 7.5, weight: .bold, design: .monospaced))
+                                        .foregroundStyle(presentation.accent.opacity(0.82))
+                                        .lineLimit(1)
+                                        .truncationMode(.tail)
+                                    Spacer(minLength: 2)
+                                    CacheStatusLabel(source: model.source, tint: presentation.accent.opacity(0.80))
+                                }
                             }
                         }
                         Spacer(minLength: 2)

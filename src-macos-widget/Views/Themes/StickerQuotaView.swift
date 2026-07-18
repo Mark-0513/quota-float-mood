@@ -261,9 +261,14 @@ struct StickerMediumQuotaView: View {
                         .clipShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
                         .rotationEffect(.degrees(presentation.rotationDegrees * 0.35))
 
-                    HStack(spacing: 5) {
-                        StickerPlanTag(plan: model.plan, color: presentation.secondaryAccent)
+                    if case .unavailable = model.source {
                         CacheStatusLabel(source: model.source, tint: StickerPalette.ink.opacity(0.66))
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    } else {
+                        HStack(spacing: 5) {
+                            StickerPlanTag(plan: model.plan, color: presentation.secondaryAccent)
+                            CacheStatusLabel(source: model.source, tint: StickerPalette.ink.opacity(0.66))
+                        }
                     }
                 }
                 .frame(width: 135, alignment: .leading)
