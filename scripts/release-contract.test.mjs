@@ -47,6 +47,11 @@ test("publishes one documented universal DMG", () => {
   assert.match(readme, /Quota-Float-Mood-v0\.2\.0-macOS-Universal\.dmg/);
   assert.match(readme, /macOS 14/);
   assert.match(readme, /Star/);
+  assert.match(readme, /完全免费/);
+  assert.match(readme, /是否支持完全自愿/);
+  assert.match(readme, /Mark-0513/);
   assert.match(readme, /change-42-yhmm\/quota-float/);
   assert.ok(existsSync(new URL("../docs/images/wechat-support.jpg", import.meta.url)));
+  assert.match(read("NOTICE.md"), /Based on Quota Float/);
+  assert.match(read("NOTICE.md"), /MIT License/);
 });

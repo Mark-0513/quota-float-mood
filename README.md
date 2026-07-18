@@ -1,132 +1,53 @@
-# Quota Float
+# Quota Float Mood
 
-Lightweight floating desktop widget for checking Codex quota from the local Codex Desktop login state.
+免费、开源的 macOS Codex 额度小组件，提供 6 套带情绪表达的主题，每套支持小号和中号。
 
-![Quota Float quota states](docs/images/quota-states.png)
+## 免费下载
 
-## Highlights
+[👉 下载最新版](https://github.com/Mark-0513/quota-float-mood/releases/latest)
 
-- Shows your Codex plan, 5-hour quota, weekly quota, and next reset time in a compact always-on-top widget.
-- Uses clear quota states for healthy, caution, and critical remaining usage.
-- Collapses into a small floating orb when idle, then expands on hover.
-- Indicates whether quota is currently being consumed.
-- Includes persistent expansion, always-on-top controls, and localized tray actions.
-- Falls back to a clearly marked weekly-quota view when the 5-hour window is unavailable.
-- Checks for app updates automatically and supports signed in-app updates on Windows.
-- Shows reset credit count and available reset-credit expiration times when the quota service provides them.
-- Handles stale data, signed-out sessions, unavailable quota responses, and loading states without fabricating values.
+普通用户只需要下载：`Quota-Float-Mood-v0.2.0-macOS-Universal.dmg`
 
-## Screenshots
+支持 Intel 与 Apple 芯片 Mac，需要 macOS 14 或更高版本。需要本机已安装并登录 Codex Desktop。
 
-| Quota states | Floating orb | Reset credit expiration |
-| --- | --- | --- |
-| ![Healthy, caution, and critical quota states](docs/images/quota-states.png) | ![Collapsed quota orb](docs/images/quota-orb.png) | ![Reset credit expiration popover](docs/images/quota-reset-expiration.png) |
+## 安装
 
-### Weekly quota fallback
+1. 下载并打开 DMG。
+2. 把 Quota Float Mood 拖进“应用程序”。
+3. 启动应用，然后在 macOS 小组件库中搜索 Quota Float Mood。
 
-| Expanded weekly view | Weekly quota orb |
-| --- | --- |
-| ![Expanded weekly quota fallback](docs/images/quota-v0.1.4-weekly-fallback.png) | ![Weekly quota orb with W badge](docs/images/quota-v0.1.4-weekly-orb.png) |
+## 喜欢这个项目？
 
-## Repository Metadata
+如果它对你有帮助，请点击仓库右上角的 **Star ⭐**。你的 Star 会让更多人发现这个项目，也会鼓励我们继续更新新皮肤。
 
-Suggested repository description:
+## 自愿支持
 
-```text
-Floating Windows/macOS desktop widget for checking Codex quota from the local Codex Desktop login state.
-```
+软件完全免费、源码开放。你可以自愿支持增强版维护者 Mark；是否支持完全自愿，不影响任何功能。
 
-Suggested topics:
+![微信支持 Mark](docs/images/wechat-support.jpg)
 
-```text
-codex, quota, tauri, react, rust, desktop-app, windows, macos, productivity
-```
+## 隐私
 
-## How It Works
+Quota Float Mood 只读取本机 Codex Desktop 登录状态来查询额度；不保存令牌、账号、提示词、聊天记录或原始额度响应，也没有遥测或第三方跟踪。详见 [PRIVACY.md](PRIVACY.md) 与 [SECURITY.md](SECURITY.md)。
 
-Quota Float reads the existing Codex Desktop login state on your machine and queries Codex/ChatGPT quota endpoints with that session. It does not estimate usage from local token counts and does not redeem reset credits or modify account settings.
+## 准确性
 
-Browser preview uses mock data. Real quota reading requires the Tauri desktop app and an existing Codex Desktop login on the same machine.
+额度来自 Codex/ChatGPT 服务响应；响应格式未知、过期或不可用时，应用会明确显示状态，不会编造额度数值。
 
-## Download
+## 开发
 
-For normal users, download the latest installer from GitHub Releases:
-
-- Latest release: https://github.com/change-42-yhmm/quota-float/releases/latest
-- Windows: use the `.exe` or `.msi` installer.
-- macOS Universal: use the `.dmg` bundle.
-
-Updater artifacts are signed with the project's Tauri update key. Windows Authenticode signing and macOS notarization are separate platform-signing steps; builds without those certificates may still trigger SmartScreen or Gatekeeper warnings.
-
-## Feedback
-
-Please use GitHub Issues for bugs, compatibility reports, and feature requests:
-
-https://github.com/change-42-yhmm/quota-float/issues
-
-## Privacy Boundary
-
-Quota Float is local-first and intentionally narrow:
-
-- Reads the local Codex Desktop login state only to query Codex quota.
-- Sends the existing Codex access token only to ChatGPT quota endpoints.
-- Stores only widget preferences in its own app config directory.
-- Does not store Codex tokens, account IDs, prompts, chat history, raw quota responses, or local auth paths.
-- Does not include telemetry, analytics, crash reporting, or third-party tracking.
-- Does not redeem reset credits or modify account settings.
-
-See [PRIVACY.md](PRIVACY.md) and [SECURITY.md](SECURITY.md) for the full boundary.
-
-## Accuracy Boundary
-
-Codex quota is read from Codex/ChatGPT quota service responses. If the response format changes, the app shows an unavailable or stale state instead of inventing quota values.
-
-## Development
-
-Requirements:
-
-- Node.js 20+
-- Rust stable
-- Tauri 2 system dependencies for your platform
+需要 Node.js 20+、Rust stable 和当前平台的 Tauri 2 依赖：
 
 ```bash
 npm install
-npm run dev
 npm run test
 npm run build
 npm run tauri dev
 ```
 
-After Codex Desktop updates, run the compatibility check:
+## 上游与增强
 
-```bash
-npm run check:codex
-```
-
-See [docs/CODEX-UPDATE-CHECK.md](docs/CODEX-UPDATE-CHECK.md) for the automated update-check workflow and optional Task Scheduler setup.
-
-## Build
-
-```bash
-npm run tauri build
-```
-
-On Windows, Tauri may download WiX to create an MSI installer. If WiX download fails, the release executable may still be produced at:
-
-```text
-src-tauri/target/release/quota-float.exe
-```
-
-## Release
-
-GitHub Actions are configured for:
-
-- CI on push/PR: frontend tests, Rust tests, web build, Tauri build.
-- `v*` tags: Windows and macOS Universal installers, updater signatures, `latest.json`, and a public GitHub Release.
-
-See [docs/GITHUB-RELEASE-CHECKLIST.md](docs/GITHUB-RELEASE-CHECKLIST.md) before publishing a version for others.
-
-Do not upload local credentials, `.codex`, `.env*`, screenshots with personal data, `node_modules`, `dist`, `src-tauri/target`, or local installers to source control.
+本项目基于 [Quota Float](https://github.com/change-42-yhmm/quota-float)，保留其 MIT 许可与贡献者归属。Mark-0513 的工作包括 macOS WidgetKit 集成和情绪主题设计；完整归属见 [NOTICE.md](NOTICE.md)。
 
 ## License
 

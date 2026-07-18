@@ -2,7 +2,7 @@
 
 ## Supported Use
 
-Quota Float is a local desktop utility that reads Codex quota using the user's existing Codex Desktop login state.
+Quota Float Mood is a local desktop utility that reads Codex quota using the user's existing Codex Desktop login state.
 
 ## Reporting Issues
 
