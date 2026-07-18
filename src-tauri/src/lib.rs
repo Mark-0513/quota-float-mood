@@ -123,7 +123,7 @@ fn widget_snapshot_body(
         .unwrap_or_else(|| {
             vec![ProviderSnapshot::failure(
                 "unavailable",
-                "Open Quota Float to refresh the macOS widget.",
+                "Open Quota Float Mood to refresh the macOS widget.",
             )]
         });
     serde_json::to_vec(&snapshots).unwrap_or_else(|_| b"[]".to_vec())
@@ -1062,7 +1062,7 @@ fn setup_tray(app: &tauri::App) -> tauri::Result<()> {
     )?;
     let mut builder = TrayIconBuilder::with_id("main")
         .menu(&menu)
-        .tooltip("Quota Float");
+        .tooltip("Quota Float Mood");
     if let Some(icon) = app.default_window_icon() {
         builder = builder.icon(icon.clone());
     }
@@ -1205,8 +1205,6 @@ fn setup_tray(app: &tauri::App) -> tauri::Result<()> {
 pub fn run() {
     let app = tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
-        .plugin(tauri_plugin_process::init())
-        .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_single_instance::init(|app, _, _| {
             if let Some(window) = app.get_webview_window("widget") {
                 let _ = window.show();
@@ -1288,7 +1286,7 @@ pub fn run() {
             }
         })
         .build(tauri::generate_context!())
-        .expect("failed to build Quota Float");
+        .expect("failed to build Quota Float Mood");
     app.run(|app_handle, event| {
         if matches!(event, tauri::RunEvent::Resumed) {
             let _ = app_handle.emit_to("widget", "refresh-requested", ());

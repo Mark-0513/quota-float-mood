@@ -2,7 +2,7 @@ import Foundation
 import XCTest
 
 final class QuotaSnapshotStoreTests: XCTestCase {
-    private let cacheKey = "app.quotafloat.widget.last-successful-snapshot"
+    private let cacheKey = "com.mark0513.quotafloatmood.widget.last-successful-snapshot"
     private var suiteName: String!
     private var defaults: UserDefaults!
 
@@ -68,9 +68,9 @@ final class QuotaSnapshotStoreTests: XCTestCase {
 
         let result = await makeStore().load(now: Date(timeIntervalSince1970: 1_000_000))
 
-        XCTAssertEqual(result.source, .unavailable(message: "请打开 Quota Float 刷新额度"))
+        XCTAssertEqual(result.source, .unavailable(message: "请打开 Quota Float Mood 刷新额度"))
         XCTAssertEqual(result.snapshot.status, "unavailable")
-        XCTAssertEqual(result.snapshot.message, "请打开 Quota Float 刷新额度")
+        XCTAssertEqual(result.snapshot.message, "请打开 Quota Float Mood 刷新额度")
         XCTAssertEqual(SnapshotURLProtocol.requestCount, 1)
     }
 
@@ -95,7 +95,7 @@ final class QuotaSnapshotStoreTests: XCTestCase {
 
         let result = await makeStore().load(now: Date(timeIntervalSince1970: 1_000_000))
 
-        XCTAssertEqual(result.source, .unavailable(message: "请打开 Quota Float 刷新额度"))
+        XCTAssertEqual(result.source, .unavailable(message: "请打开 Quota Float Mood 刷新额度"))
         XCTAssertEqual(result.snapshot.status, "unavailable")
         XCTAssertNil(defaults.data(forKey: cacheKey))
         XCTAssertEqual(SnapshotURLProtocol.requestCount, 1)

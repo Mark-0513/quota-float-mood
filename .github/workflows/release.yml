@@ -38,24 +38,22 @@ jobs:
       - uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
-          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
           tagName: v__VERSION__
-          releaseName: Quota Float v__VERSION__
+          releaseName: Quota Float Mood v__VERSION__
           releaseBody: |
             ## What's new
 
             - Keeps showing weekly quota when the 5-hour window is temporarily unavailable, with a clear `W` badge.
             - Adds persistent expansion, clearer active controls, exact reset time, and localized tray actions.
-            - Adds automatic update checks and a safe GitHub Releases fallback link.
+            - Opens the GitHub Releases page for manual update checks.
             - Improves edge docking and transparent rounded-window rendering on Windows and macOS.
 
-            ![Quota Float weekly quota fallback](https://raw.githubusercontent.com/change-42-yhmm/quota-float/main/docs/images/quota-v0.1.4-weekly-fallback.png)
+            ![Quota Float Mood weekly quota fallback](https://raw.githubusercontent.com/Mark-0513/quota-float-mood/main/docs/images/quota-v0.1.4-weekly-fallback.png)
 
             ## Privacy
 
-            Quota Float remains local-first: it reads the existing Codex Desktop login state only for quota requests and does not upload prompts, chats, raw quota responses, or local credentials.
+            Quota Float Mood remains local-first: it reads the existing Codex Desktop login state only for quota requests and does not upload prompts, chats, raw quota responses, or local credentials.
           releaseDraft: false
           prerelease: false
           args: ${{ matrix.args }}

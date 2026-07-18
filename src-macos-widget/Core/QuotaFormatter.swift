@@ -25,7 +25,7 @@ enum QuotaFormatter {
             let isOverOneDayOld = now.timeIntervalSince(savedAt) > 86_400
             return isOlderThanOneDay || isOverOneDayOld ? "数据较旧" : "缓存数据"
         case let .unavailable(message):
-            return message?.isEmpty == false ? message : "请打开 Quota Float"
+            return message?.isEmpty == false ? message : "请打开 Quota Float Mood"
         }
     }
 

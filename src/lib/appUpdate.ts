@@ -1,7 +1,7 @@
 import { isTauri } from "./bridge";
 import type { Language } from "../types";
 
-export const RELEASE_URL = "https://github.com/change-42-yhmm/quota-float/releases/latest";
+export const RELEASE_URL = "https://github.com/Mark-0513/quota-float-mood/releases/latest";
 
 export interface UpdateMessages {
   checking: string;
@@ -23,47 +23,15 @@ export async function openReleasePage(): Promise<void> {
 }
 
 export async function checkForAppUpdate(
-  language: Language,
+  _language: Language,
   messages: UpdateMessages,
   setStatus: (message: string | null) => void,
   manual = false,
 ): Promise<void> {
-  if (!isTauri()) {
-    if (manual) setStatus(messages.current);
-    return;
-  }
-
-  if (manual) setStatus(messages.checking);
+  if (!manual) return;
   try {
-    const { check } = await import("@tauri-apps/plugin-updater");
-    const update = await check({ timeout: 15_000 });
-    if (!update) {
-      if (manual) setStatus(messages.current);
-      return;
-    }
-
-    const isMac = /Macintosh|Mac OS X/i.test(navigator.userAgent);
-    if (isMac) {
-      const prompt = messages.availableMac(update.version);
-      setStatus(prompt);
-      if (window.confirm(prompt)) {
-        await openReleasePage();
-      }
-      return;
-    }
-
-    const prompt = messages.availableWindows(update.version);
-    setStatus(prompt);
-    if (!window.confirm(prompt)) return;
-
-    setStatus(messages.downloading(update.version));
-    await update.downloadAndInstall((event) => {
-      if (event.event === "Finished") setStatus(messages.installing);
-    });
-    const { relaunch } = await import("@tauri-apps/plugin-process");
-    await relaunch();
+    await openReleasePage();
   } catch {
-    if (!manual) return;
     setStatus(messages.failed);
   }
 }

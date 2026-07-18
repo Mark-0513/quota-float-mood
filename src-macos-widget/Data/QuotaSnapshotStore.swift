@@ -6,8 +6,8 @@ struct QuotaLoadResult: Equatable {
 }
 
 struct QuotaSnapshotStore {
-    private static let cacheKey = "app.quotafloat.widget.last-successful-snapshot"
-    private static let unavailableMessage = "请打开 Quota Float 刷新额度"
+    private static let cacheKey = "com.mark0513.quotafloatmood.widget.last-successful-snapshot"
+    private static let unavailableMessage = "请打开 Quota Float Mood 刷新额度"
     private static let oneDay: TimeInterval = 86_400
 
     private let session: URLSession

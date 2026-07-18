@@ -1,21 +1,20 @@
 {
-  "name": "quota-float",
+  "name": "quota-float-mood",
   "private": true,
-  "version": "0.1.5",
+  "version": "0.2.0",
   "type": "module",
   "scripts": {
     "dev": "vite --configLoader native",
     "build": "tsc && vite build --configLoader native",
     "check:codex": "powershell -ExecutionPolicy Bypass -File scripts/check-codex-update.ps1",
     "test": "vitest run --configLoader native",
+    "test:release-contract": "node --test scripts/release-contract.test.mjs",
     "tauri": "tauri"
   },
   "dependencies": {
     "@phosphor-icons/react": "^2.1.10",
     "@tauri-apps/api": "^2.8.0",
     "@tauri-apps/plugin-opener": "^2.5.4",
-    "@tauri-apps/plugin-process": "^2.3.1",
-    "@tauri-apps/plugin-updater": "^2.10.1",
     "react": "^19.1.1",
     "react-dom": "^19.1.1"
   },

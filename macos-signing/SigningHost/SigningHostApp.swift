@@ -1,10 +1,10 @@
 import SwiftUI
 
 @main
-struct QuotaFloatSigningHostApp: App {
+struct QuotaFloatMoodSigningHostApp: App {
     var body: some Scene {
         Settings {
-            Text("Quota Float Widget signing host")
+            Text("Quota Float Mood Widget signing host")
                 .padding()
         }
     }

@@ -47,7 +47,7 @@ final class QuotaFormatterTests: XCTestCase {
 
     func testSourceTextUsesUnavailableMessageOrFallback() {
         XCTAssertEqual(QuotaFormatter.sourceText(.unavailable(message: "服务暂不可用")), "服务暂不可用")
-        XCTAssertEqual(QuotaFormatter.sourceText(.unavailable(message: nil)), "请打开 Quota Float")
+        XCTAssertEqual(QuotaFormatter.sourceText(.unavailable(message: nil)), "请打开 Quota Float Mood")
     }
 
     private func expectedResetText(for rawDate: String) -> String {
