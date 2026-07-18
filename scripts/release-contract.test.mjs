@@ -58,3 +58,20 @@ test("publishes one documented universal DMG", () => {
   assert.match(read("NOTICE.md"), /Based on Quota Float/);
   assert.match(read("NOTICE.md"), /MIT License/);
 });
+
+test("builds the documented universal DMG", () => {
+  const script = read("scripts/build-macos-distribution.sh");
+  assert.match(script, /Quota-Float-Mood-v\$\{VERSION\}-macOS-Universal\.dmg/);
+  assert.match(script, /arm64/);
+  assert.match(script, /x86_64/);
+  assert.match(script, /codesign --verify --deep --strict/);
+  assert.match(script, /shasum -a 256/);
+  assert.ok((script.match(/CODE_SIGNING_REQUIRED=NO/g) ?? []).length >= 2);
+  assert.match(script, /GENERATE_INFOPLIST_FILE=YES/);
+  assert.match(script, /xcodebuild \\\n  -quiet/);
+  assert.match(script, /build-for-testing/);
+  assert.match(script, /xcrun xctest/);
+  assert.match(script, /Executed 31 tests, with 0 failures/);
+  assert.match(script, /rustup which cargo/);
+  assert.match(script, /rustup target list --installed/);
+});
