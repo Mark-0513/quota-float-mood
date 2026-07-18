@@ -50,6 +50,9 @@ test("publishes one documented universal DMG", () => {
   assert.match(readme, /完全免费/);
   assert.match(readme, /是否支持完全自愿/);
   assert.match(readme, /Mark-0513/);
+  assert.match(readme, /v0\.2\.0.*未签名\/ad-hoc beta/);
+  assert.match(readme, /Control\/右键点击.*打开.*打开/);
+  assert.match(readme, /系统设置.*隐私与安全性.*Open Anyway/);
   assert.match(readme, /change-42-yhmm\/quota-float/);
   assert.ok(existsSync(new URL("../docs/images/wechat-support.jpg", import.meta.url)));
   assert.match(read("NOTICE.md"), /Based on Quota Float/);

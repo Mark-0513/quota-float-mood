@@ -12,9 +12,13 @@
 
 ## 安装
 
+> **Beta 提示：** v0.2.0 是未签名/ad-hoc beta，尚未经过 Apple notarization；首次打开可能会被 Gatekeeper 拦截。
+
 1. 下载并打开 DMG。
 2. 把 Quota Float Mood 拖进“应用程序”。
-3. 启动应用，然后在 macOS 小组件库中搜索 Quota Float Mood。
+3. 在“应用程序”中 Control/右键点击 Quota Float Mood，选择“打开”，然后再次选择“打开”。
+4. 若仍被拦截，打开“系统设置” → “隐私与安全性” → “Open Anyway”。
+5. 启动应用，然后在 macOS 小组件库中搜索 Quota Float Mood。
 
 ## 喜欢这个项目？
 
