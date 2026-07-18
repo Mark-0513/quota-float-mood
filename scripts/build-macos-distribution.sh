@@ -4,6 +4,9 @@ set -euo pipefail
 ROOT_DIR="${0:A:h:h}"
 RELEASE_DIR="$ROOT_DIR/release"
 BUILD_DIR="$RELEASE_DIR/build"
+FRONTEND_DIST="$BUILD_DIR/frontend-dist"
+XCODE_PROJECT_DIR="$BUILD_DIR/xcode-project"
+XCODE_PROJECT="$XCODE_PROJECT_DIR/QuotaFloatMoodSigning.xcodeproj"
 WIDGET_DERIVED_DATA="$BUILD_DIR/widget-derived-data"
 WIDGET_TEST_DERIVED_DATA="$BUILD_DIR/widget-test-derived-data"
 WIDGET_TEST_BUNDLE="$WIDGET_TEST_DERIVED_DATA/Build/Products/Debug/QuotaFloatMoodWidgetTests.xctest"
@@ -31,6 +34,32 @@ verify_universal() {
   [[ " $architectures " == *" x86_64 "* ]] || fail "x86_64 slice missing: $binary_path ($architectures)"
   print -- "Universal slices: $binary_path -> $architectures"
 }
+
+assert_safe_build_dir() {
+  local repo_physical
+  local release_physical
+  local build_physical
+
+  [[ ! -L "$RELEASE_DIR" ]] || fail "release directory is a symlink: $RELEASE_DIR"
+  [[ ! -L "$BUILD_DIR" ]] || fail "build directory is a symlink: $BUILD_DIR"
+
+  repo_physical="$(cd "$ROOT_DIR" && pwd -P)"
+  mkdir -p "$RELEASE_DIR"
+  [[ ! -L "$RELEASE_DIR" ]] || fail "release directory became a symlink: $RELEASE_DIR"
+  release_physical="$(cd "$RELEASE_DIR" && pwd -P)"
+  [[ "$release_physical" == "$repo_physical/release" ]] || \
+    fail "physical release directory escapes repository: $release_physical"
+
+  mkdir -p "$BUILD_DIR"
+  [[ ! -L "$BUILD_DIR" ]] || fail "build directory became a symlink: $BUILD_DIR"
+  build_physical="$(cd "$BUILD_DIR" && pwd -P)"
+  [[ "$build_physical" == "$repo_physical/release/build" ]] || \
+    fail "physical build directory escapes repository: $build_physical"
+  [[ "$build_physical" == "$repo_physical/"* ]] || \
+    fail "physical build directory is outside repository: $build_physical"
+}
+
+assert_safe_build_dir
 
 if ! command -v rustup >/dev/null 2>&1; then
   for rustup_bin_dir in /opt/homebrew/opt/rustup/bin /usr/local/opt/rustup/bin; do
@@ -73,7 +102,10 @@ TAURI_VERSION="$(node -p "require('./src-tauri/tauri.conf.json').version")"
 DMG_NAME="Quota-Float-Mood-v${VERSION}-macOS-Universal.dmg"
 DMG_PATH="$RELEASE_DIR/$DMG_NAME"
 CHECKSUM_PATH="$DMG_PATH.sha256"
-TAURI_APP="$ROOT_DIR/src-tauri/target/universal-apple-darwin/release/bundle/macos/$APP_NAME.app"
+export CARGO_TARGET_DIR="$BUILD_DIR/cargo-target"
+export QUOTA_FLOAT_FRONTEND_DIST="$FRONTEND_DIST"
+TAURI_BUILD_CONFIG="$(node -e 'process.stdout.write(JSON.stringify({ build: { frontendDist: process.env.QUOTA_FLOAT_FRONTEND_DIST } }))')"
+TAURI_APP="$CARGO_TARGET_DIR/universal-apple-darwin/release/bundle/macos/$APP_NAME.app"
 PACKAGED_APP="$BUILD_DIR/$APP_NAME.app"
 WIDGET_APP="$WIDGET_DERIVED_DATA/Build/Products/Release/$APP_NAME.app"
 BUILT_EXTENSION="$WIDGET_DERIVED_DATA/Build/Products/Release/$EXTENSION_NAME.appex"
@@ -82,7 +114,6 @@ HOST_BINARY="$PACKAGED_APP/Contents/MacOS/quota-float-mood"
 EXTENSION_BINARY="$PACKAGED_EXTENSION/Contents/MacOS/$EXTENSION_NAME"
 
 [[ "$BUILD_DIR" == "$ROOT_DIR/release/build" ]] || fail "refusing unsafe build directory: $BUILD_DIR"
-mkdir -p "$RELEASE_DIR"
 rm -rf "$BUILD_DIR"
 mkdir -p "$BUILD_DIR"
 rm -f "$DMG_PATH" "$CHECKSUM_PATH"
@@ -103,19 +134,24 @@ print -- "==> Running Rust tests"
 cargo test --manifest-path src-tauri/Cargo.toml
 
 print -- "==> Generating the WidgetKit Xcode project"
-xcodegen generate --spec macos-signing/project.yml --project macos-signing
+mkdir -p "$XCODE_PROJECT_DIR"
+xcodegen generate \
+  --spec "$ROOT_DIR/macos-signing/project.yml" \
+  --project "$XCODE_PROJECT_DIR" \
+  --project-root "$ROOT_DIR/macos-signing"
 
 print -- "==> Building the WidgetKit test bundle"
 xcodebuild \
   -quiet \
-  -project macos-signing/QuotaFloatMoodSigning.xcodeproj \
+  -project "$XCODE_PROJECT" \
   -scheme QuotaFloatMoodSigningHost \
   -configuration Debug \
   -derivedDataPath "$WIDGET_TEST_DERIVED_DATA" \
   build-for-testing \
   CODE_SIGNING_ALLOWED=NO \
   CODE_SIGNING_REQUIRED=NO \
-  GENERATE_INFOPLIST_FILE=YES
+  GENERATE_INFOPLIST_FILE=YES \
+  QUOTA_FLOAT_SOURCE_ROOT="$ROOT_DIR"
 [[ -d "$WIDGET_TEST_BUNDLE" ]] || fail "WidgetKit test bundle not found: $WIDGET_TEST_BUNDLE"
 [[ -x "$WIDGET_TEST_BUNDLE/Contents/MacOS/QuotaFloatMoodWidgetTests" ]] || \
   fail "WidgetKit test executable not found"
@@ -130,12 +166,12 @@ print -- "$WIDGET_TEST_OUTPUT"
   fail "WidgetKit test count changed or failures occurred"
 
 print -- "==> Building the universal Tauri app"
-npm run tauri -- build --target universal-apple-darwin --bundles app
+npm run tauri -- build --target universal-apple-darwin --bundles app --config "$TAURI_BUILD_CONFIG"
 [[ -d "$TAURI_APP" ]] || fail "Tauri app not found at inspected output path: $TAURI_APP"
 
 print -- "==> Building the universal WidgetKit host and extension"
 xcodebuild \
-  -project macos-signing/QuotaFloatMoodSigning.xcodeproj \
+  -project "$XCODE_PROJECT" \
   -scheme QuotaFloatMoodSigningHost \
   -configuration Release \
   -derivedDataPath "$WIDGET_DERIVED_DATA" \
@@ -143,7 +179,8 @@ xcodebuild \
   ARCHS="arm64 x86_64" \
   ONLY_ACTIVE_ARCH=NO \
   CODE_SIGNING_ALLOWED=NO \
-  CODE_SIGNING_REQUIRED=NO
+  CODE_SIGNING_REQUIRED=NO \
+  QUOTA_FLOAT_SOURCE_ROOT="$ROOT_DIR"
 [[ -d "$WIDGET_APP" ]] || fail "WidgetKit host not found at inspected output path: $WIDGET_APP"
 [[ -d "$BUILT_EXTENSION" ]] || fail "WidgetKit extension not found at inspected output path: $BUILT_EXTENSION"
 

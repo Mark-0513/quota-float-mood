@@ -38,6 +38,37 @@ fi
 mkdir -p "$APP_PATH/Contents/PlugIns"
 ditto "$BUILT_EXTENSION_PATH" "$EXTENSION_PATH"
 
+HOST_INFO_PLIST="$APP_PATH/Contents/Info.plist"
+EXTENSION_INFO_PLIST="$EXTENSION_PATH/Contents/Info.plist"
+HOST_BUNDLE_VERSION="$(plutil -extract CFBundleVersion raw -o - "$HOST_INFO_PLIST")" || {
+  print -u2 "host CFBundleVersion is missing: $HOST_INFO_PLIST"
+  exit 7
+}
+EXTENSION_BUNDLE_VERSION="$(plutil -extract CFBundleVersion raw -o - "$EXTENSION_INFO_PLIST")" || {
+  print -u2 "widget CFBundleVersion is missing: $EXTENSION_INFO_PLIST"
+  exit 7
+}
+[[ "$HOST_BUNDLE_VERSION" == "$EXTENSION_BUNDLE_VERSION" ]] || {
+  print -u2 "CFBundleVersion mismatch: host=$HOST_BUNDLE_VERSION widget=$EXTENSION_BUNDLE_VERSION"
+  exit 7
+}
+
+APPLE_VALIDATION_OUTPUT="$(
+  xcrun EmbeddedBinaryValidationUtility "$EXTENSION_PATH" \
+    -info-plist-path "$HOST_INFO_PLIST" \
+    -parent-bundle-path "$APP_PATH" 2>&1
+)" || {
+  print -u2 -- "$APPLE_VALIDATION_OUTPUT"
+  print -u2 "Apple embedded-binary validation failed"
+  exit 8
+}
+[[ -z "$APPLE_VALIDATION_OUTPUT" ]] || {
+  print -u2 -- "$APPLE_VALIDATION_OUTPUT"
+  print -u2 "Apple embedded-binary validation emitted diagnostics"
+  exit 8
+}
+print "Apple embedded-binary validation: passed ($HOST_BUNDLE_VERSION)"
+
 if [[ "$SIGN_IDENTITY" == "-" ]]; then
   codesign --force --timestamp=none --options runtime \
     --entitlements "$SOURCE_DIR/QuotaFloatWidget.entitlements" \
