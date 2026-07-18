@@ -80,6 +80,11 @@ test("keeps host and widget identities isolated from upstream", () => {
   assert.match(widgetInfo, /<key>CFBundleVersion<\/key>\s*<string>0\.2\.0<\/string>/);
 });
 
+test("requires macOS 14 for the Tauri host app", () => {
+  const tauri = json("src-tauri/tauri.conf.json");
+  assert.equal(tauri.bundle.macOS?.minimumSystemVersion, "14.0");
+});
+
 test("publishes one documented universal DMG", () => {
   const readme = read("README.md");
   assert.match(readme, /Quota-Float-Mood-v0\.2\.0-macOS-Universal\.dmg/);
